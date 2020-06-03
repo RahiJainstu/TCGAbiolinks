@@ -276,7 +276,15 @@ GDCquery_clinic <- function(project, type = "clinical", save.csv = FALSE){
             df <- data.frame("submitter_id" = results$submitter_id)
 
             if("diagnoses" %in% colnames(results)){
-                diagnoses <- rbindlist(lapply(results$diagnoses, function(x) if(is.null(x)) data.frame(NA) else x),fill = T)
+                diagnoses <- rbindlist(lapply(results$diagnoses, function(x) {
+                    # Ensure only single row of data is copied.
+                    if(is.null(x)) data.frame(NA) 
+                    else {
+                        if (nrow(x) > 1) {
+                            NA_ROWS=rowSums(is.na(x)) # get number of NA columns for each rows
+                            x = x[which(NA_ROWS == min(NA_ROWS)), ] # select the row with minimum number of NAs
+						}
+                        x} }),fill = T)
                 #df$submitter_id <- gsub("^d|_diagnosis|diag-|-DX|-DIAG|-diagnosis","", df$submitter_id)
                 # ^d ORGANOID-PANCREATIC
                 # -DX CPTAC-2
